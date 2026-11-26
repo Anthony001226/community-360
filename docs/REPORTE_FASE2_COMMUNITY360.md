@@ -308,7 +308,7 @@ await batchWriteDynamoItems('interacciones_cuarentena', interaccionesCuarentena)
 
 En la siguiente captura se observa la salida completa en terminal de `node src/etl.js`, mostrando los resultados de auditoría de las etapas 1 a 7, la creación de los cuatro archivos en `/output_depurado` y la confirmación de carga de la Etapa 8 tanto en Amazon RDS (`community360`) como en Amazon DynamoDB:
 
-![Ejecución exitosa del script ETL en consola](./evidencias/01_ejecucion_etl_consola.png)
+![Ejecución exitosa del script ETL en consola](../evidencias/01_ejecucion_etl_consola.png)
 
 ### 4.2 Verificación en Amazon RDS PostgreSQL: Conteo de las 7 Tablas y Comprobación de Privacidad
 
@@ -319,17 +319,17 @@ Como se aprecia en la captura:
 2. En la consulta `LEFT JOIN` sobre los usuarios con `consentimiento_datos = false` (`U000004`, `U000011`, `U000017`, etc.), las columnas `pais`, `estado`, `ciudad`, `latitud` y `longitud` aparecen todas en **`null`**.
 3. El conteo final confirma **`171` usuarios sin consentimiento** y **`0` ubicaciones almacenadas por error**.
 
-![Verificación de tablas y auditoría de privacidad en Amazon RDS PostgreSQL](./evidencias/04_verificacion_rds_privacidad.png)
+![Verificación de tablas y auditoría de privacidad en Amazon RDS PostgreSQL](../evidencias/04_verificacion_rds_privacidad.png)
 
 ### 4.3 Verificación en la Consola de Amazon DynamoDB (Tablas e Ítems Cargados)
 
 En el panel de **Amazon DynamoDB** dentro de AWS Console se verifica la creación y estado `Active` de las dos tablas NoSQL aprovisionadas (`interacciones` con llave de partición `id_interaccion` e `interacciones_cuarentena` con llave de partición `id_cuarentena`):
 
-![Tablas activas en la consola de Amazon DynamoDB](./evidencias/02_tablas_dynamodb.png)
+![Tablas activas en la consola de Amazon DynamoDB](../evidencias/02_tablas_dynamodb.png)
 
 Finalmente, mediante el explorador de ítems (**Explore items**) de Amazon DynamoDB sobre la tabla `interacciones`, se comprueba la estructura de los documentos cargados: las etiquetas almacenadas como listas nativas (`etiquetas`), los textos de reacciones vacías normalizados a `null` con `longitud_texto = 0` (por ejemplo, `I0001321`, `I0002939`, `I0002237`), y los atributos validados:
 
-![Exploración de ítems normalizados en Amazon DynamoDB](./evidencias/03_items_dynamodb.jpg)
+![Exploración de ítems normalizados en Amazon DynamoDB](../evidencias/03_items_dynamodb.jpg)
 
 ---
 

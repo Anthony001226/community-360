@@ -13,6 +13,11 @@
 
 ## 2. Descripción General del Sistema y Solución Planteada
 
+> [!NOTE] Guía para redactar con tus palabras (Sección 2)
+> **Qué puntos tocar:** Qué problema resuelve la app (juntar usuarios e interacciones en la nube en un solo panel), los 4 módulos (Login, carga inicial por REST, cambios en vivo con Socket.IO y respeto a la privacidad de los 171 usuarios) y mencionar que tu API tiene **15 endpoints**.
+>
+> **Propuesta de texto:** *"La página de COMMUNITY 360 junta los datos que limpiamos en la fase anterior para ver qué pasa en la comunidad sin tener que revisar archivos sueltos. Primero te pide iniciar sesión validando al usuario en Amazon RDS; ya adentro, carga el resumen de los 1,068 usuarios y las 207 interacciones válidas. Para que el tablero se mueva solo cuando se manda un cambio desde Postman, conecté WebSockets con Socket.IO, y además cuidé que cualquier interacción nueva respete si el usuario dio permiso o no de mostrar su ubicación."*
+
 COMMUNITY 360 es una aplicación web diseñada para centralizar y analizar la actividad de una comunidad digital de 1,068 usuarios y sus interacciones en distintas redes sociales. El sistema resuelve el problema de tener la información repartida en archivos aislados, separando los datos estables del padrón en una base relacional y la actividad social en una base NoSQL, para mostrar indicadores claros en un tablero que se actualiza solo cuando ocurren cambios.
 
 ### 2.1 Módulos integrados
@@ -48,6 +53,11 @@ El backend está construido en Node.js con Express y cuenta con **15 endpoints R
 
 ## 3. Evolución del Stack Tecnológico
 
+> [!NOTE] Guía para redactar con tus palabras (Sección 3)
+> **Qué puntos tocar:** Qué herramientas usaste al final (Amazon RDS PostgreSQL, Amazon DynamoDB, Node.js/Express, Socket.IO, Chart.js y Render) y qué cambió respecto a la Fase 1 (te decidiste por PostgreSQL + DynamoDB, creaste la base limpia `community360`, dejaste las tablas de DynamoDB sin índices secundarios por ahora y quitaste formularios del frontend).
+>
+> **Propuesta de texto:** *"Al principio en la Fase 1 había dejado abiertas varias opciones como MySQL o MongoDB, pero ya para construirlo todo me quedé con PostgreSQL en Amazon RDS y DynamoDB en la misma región de AWS para evitar problemas de conexión. También creé una base aparte llamada community360 para no revolver tablas viejas, dejé las tablas de DynamoDB solo con su llave principal para no complicar la carga inicial y quité cualquier formulario de edición en el dashboard para que todo se pruebe desde Postman."*
+
 ### 3.1 Tecnologías finales utilizadas
 
 - **Base de datos relacional en la nube:** Amazon RDS con PostgreSQL (`community360`), conectada con SSL para guardar el padrón de usuarios, catálogos, métricas, ubicaciones autorizadas, administradores y bitácora (Amazon Web Services, 2026b).
@@ -55,7 +65,7 @@ El backend está construido en Node.js con Express y cuenta con **15 endpoints R
 - **Backend:** Node.js con Express para la API REST, `pg` para PostgreSQL y el SDK v3 de AWS para DynamoDB.
 - **WebSockets:** Socket.IO integrado en el mismo servidor de Express para enviar actualizaciones al navegador (Socket.IO, 2026).
 - **Frontend y graficación:** HTML5, CSS3 y JavaScript sin frameworks pesados, junto con Chart.js servido localmente para la gráfica de barras y la dona (Chart.js Contributors, 2026).
-- **Plataforma de despliegue:** [Indicar plataforma usada, por ejemplo: Render / Railway / EC2].
+- **Plataforma de despliegue:** Render (Web Service en Node.js conectado al repositorio en GitHub).
 
 ### 3.2 Modificaciones respecto a la Fase 1
 
@@ -67,6 +77,11 @@ El backend está construido en Node.js con Express y cuenta con **15 endpoints R
 ---
 
 ## 4. Análisis de Base de Datos y Escalabilidad
+
+> [!NOTE] Guía para redactar con tus palabras (Sección 4)
+> **Qué puntos tocar:** Cómo se comportaría tu base híbrida si pasara de 207 interacciones a cientos de miles (cuello de botella: hoy el backend hace un escaneo completo en DynamoDB en cada evento y recalcula todo) y qué cambiarías para escalar (crear los GSIs que faltaron, usar DynamoDB Streams/Lambda para contadores, meter caché con Redis y mandar solo el cambio puntual por WebSocket).
+>
+> **Propuesta de texto:** *"Con los datos actuales la página carga rápido, pero si llegaran cientos de miles de interacciones al mismo tiempo tendría un cuello de botella fuerte: ahorita el servidor escanea toda la tabla de DynamoDB cada vez que alguien entra o manda un cambio desde Postman. Para que aguante mucho tráfico, le agregaría los índices secundarios (GSI) que quedaron pendientes, guardaría los totales en caché con Redis para no consultar la base a cada rato y mandaría por WebSocket únicamente el dato que cambió en lugar de recalcular toda la tabla."*
 
 El sistema utiliza un esquema híbrido: **PostgreSQL en Amazon RDS** para la información estructurada de usuarios y sus relaciones, y **DynamoDB** para los eventos de interacción que tienen listas de etiquetas y subdocumentos opcionales de ubicación.
 
@@ -90,6 +105,11 @@ Para que la arquitectura soporte un crecimiento masivo sin volverse lenta, se pr
 ---
 
 ## 5. Evidencias del Sistema Desplegado
+
+> [!NOTE] Guía para redactar con tus palabras (Secciones 5.1 y 5.2)
+> **Qué puntos tocar:** Explicar que los indicadores del padrón (RDS) solo se piden por REST al entrar porque no cambian con Postman, mientras que los de DynamoDB (sentimiento, barras por canal, mapa de calor y feed) sí van por WebSockets; y dar ejemplos concretos de decisiones con cada gráfica.
+>
+> **Propuesta de texto:** *"Dividí el consumo en dos partes para no gastar peticiones de más: las tarjetas de usuarios activos, en riesgo, consentimiento, actividad, comisiones y la dona de estatus solo se cargan por REST al abrir la página, porque vienen de RDS y no cambian cuando mandas una interacción desde Postman. En cambio, el sentimiento promedio, las barras por canal, el mapa de calor y la lista reciente sí se actualizan por WebSockets porque dependen de DynamoDB. Con esto podemos detectar rápido si sube el porcentaje de gente en riesgo (39.4 %) para mandarles avisos en sus redes principales como Telegram o Facebook, o ver a qué horas hay más movimiento en el mapa de calor para publicar eventos."*
 
 ### 5.1 Arquitectura de consumo (REST vs. WebSockets)
 
@@ -115,33 +135,38 @@ Cada parte del dashboard usa el mecanismo de comunicación que corresponde a la 
 ### 5.3 Capturas del acceso y vista general del sistema
 
 - **Pantalla de inicio de sesión:** Esta vista restringe el acceso al tablero analítico mediante usuario o correo institucional y contraseña validados contra Amazon RDS, mostrando mensajes claros si las credenciales fallan.
-  *(Inserta aquí la captura del Login)*
 
-- **Vista principal del dashboard:** Muestra en la parte superior el estado de conexión en vivo y el botón de salida con el usuario activo, seguido de la franja de los seis KPIs con su fórmula, las gráficas de barras y dona, el mapa de calor semanal y el listado de actividad reciente.
-  *(Inserta aquí la captura del dashboard completo en línea)*
+  > **[CAPTURA 1 — PEGAR AQUÍ]:** Pantalla de Login en `https://community-360-mlwu.onrender.com` con el usuario `lizandro.reyes`.
+
+- **Vista principal del dashboard:** Muestra en la parte superior el estado de conexión en vivo y el botón de salida con el usuario activo, seguido de la franja de los seis KPIs, las gráficas de barras y dona, el mapa de calor semanal y el listado de actividad reciente.
+
+  > **[CAPTURA 2 — PEGAR AQUÍ]:** Vista completa del Dashboard desplegado en Render mostrando datos reales y el indicador `En vivo (WebSockets)`.
 
 ### 5.4 Pruebas de actualización en vivo (Postman + Dashboard)
 
 1. **Prueba 1 — Alta de interacción (`POST /api/interacciones`):**
    - Petición enviada desde Postman con un cuerpo JSON válido para un usuario existente en RDS, obteniendo respuesta `201 Created`.
-   - En el navegador se observa el nuevo registro en la parte superior del feed, el incremento de una unidad en el canal correspondiente dentro de la gráfica de barras, la actualización de la celda de día/hora en el mapa de calor y el recálculo del sentimiento promedio sin recargar.
-   - *(Inserta aquí la captura en pantalla dividida: Postman + Dashboard)*
+   - En el navegador se observa el nuevo registro en la parte superior del feed, el incremento de una unidad en el canal correspondiente dentro de la gráfica de barras (Discord pasa de 15 a 16), la actualización de la celda de día/hora en el mapa de calor y el recálculo del sentimiento promedio sin recargar.
+
+   > **[CAPTURA 3 — PEGAR AQUÍ (Pantalla dividida)]:** Izquierda: Postman ejecutando `5. Crear Nueva Interacción (POST)` con respuesta `201 Created`. Derecha: Dashboard en Render mostrando `[creada] I9990001` en el feed y Discord actualizado en tiempo real.
 
 2. **Prueba 2 — Modificación de interacción (`PUT /api/interacciones/:id`):**
-   - Petición enviada desde Postman cambiando el canal y el valor de sentimiento del registro creado, obteniendo respuesta `200 OK`.
-   - En el dashboard se observa cómo baja el conteo en el canal anterior, sube en el nuevo canal y cambia el promedio general de sentimiento al instante.
-   - *(Inserta aquí la captura en pantalla dividida: Postman + Dashboard)*
+   - Petición enviada desde Postman cambiando el canal a Telegram y el valor de sentimiento a `-0.45` sobre el registro creado, obteniendo respuesta `200 OK`.
+   - En el dashboard se observa cómo baja el conteo en Discord, sube en Telegram y cambia el promedio general de sentimiento al instante.
+
+   > **[CAPTURA 4 — PEGAR AQUÍ (Pantalla dividida)]:** Izquierda: Postman ejecutando `6. Actualizar Interacción (PUT)` con respuesta `200 OK`. Derecha: Dashboard en Render mostrando `[actualizada] I9990001`, el cambio de canal en la gráfica de barras y el nuevo sentimiento promedio.
 
 3. **Prueba 3 — Eliminación de interacción (`DELETE /api/interacciones/:id`):**
-   - Petición enviada desde Postman para borrar la interacción de prueba, obteniendo respuesta `200 OK`.
-   - En el dashboard se observa que el canal regresa a su conteo previo y el sentimiento promedio vuelve a su valor anterior sin recargar la página.
-   - *(Inserta aquí la captura en pantalla dividida: Postman + Dashboard)*
+   - Petición enviada desde Postman para borrar la interacción de prueba `I9990001`, obteniendo respuesta `200 OK`.
+   - En el dashboard se observa que Telegram regresa a su conteo previo (70) y el sentimiento promedio vuelve a su valor original (`+0.299`) sin recargar la página.
+
+   > **[CAPTURA 5 — PEGAR AQUÍ (Pantalla dividida)]:** Izquierda: Postman ejecutando `7. Eliminar Interacción (DELETE)` con respuesta `200 OK`. Derecha: Dashboard en Render mostrando `[eliminada] I9990001` y los valores restaurados en tiempo real.
 
 ---
 
 ## 6. Enlaces de Despliegue y Credenciales de Evaluación
 
-- **Liga pública del proyecto desplegado:** `https://[tu-url-publica-aqui]`
+- **Liga pública del proyecto desplegado:** https://community-360-mlwu.onrender.com
 - **Credenciales del usuario docente:**
   - **Usuario:** `lizandro.reyes`
   - **Correo:** `lizandro.reyes@utmetropolitana.edu.mx`
@@ -152,6 +177,12 @@ Cada parte del dashboard usa el mecanismo de comunicación que corresponde a la 
 ## 7. Conclusiones y Referencias Bibliográficas (APA 7)
 
 ### Conclusiones
+
+> [!NOTE] Guía para redactar con tus palabras (Sección 7)
+> **Qué puntos tocar:** Qué fue lo que más trabajo te costó (abrir el puerto 5432 en AWS, conectar RDS + DynamoDB en Render, lograr que Postman actualizara el dashboard sin recargar) y qué aprendiste de usar SQL + NoSQL juntos.
+>
+> **Propuesta de texto:** *"Lo que más me costó trabajo al principio fue la conexión hacia Amazon RDS por las reglas del firewall y entender cómo separar bien qué datos iban en SQL y cuáles en NoSQL. Al final me di cuenta de que combinar PostgreSQL para los datos fijos de usuarios y DynamoDB para las interacciones hace mucho más ordenado el proyecto, y ver cómo una petición en Postman actualiza las gráficas en Render al instante me ayudó a entender cómo funcionan los dashboards reales en la nube."*
+
 [Redacta aquí con tus propias palabras tu reflexión sobre los retos y aprendizajes al conectar Amazon RDS con DynamoDB, manejar las actualizaciones en vivo con Socket.IO desde Postman y desplegar la aplicación en línea.]
 
 ### Referencias
