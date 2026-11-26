@@ -1,0 +1,79 @@
+{
+  "info": {
+    "name": "COMMUNITY 360 - API REST (Fases 4, 5 y 6)",
+    "_postman_id": "c360-fases-4-5-6",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Login Docente (Evaluador)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"identifier\": \"lizandro.reyes\",\n  \"password\": \"lizandr0_reye$\"\n}"
+        },
+        "url": "{{baseUrl}}/api/auth/login"
+      }
+    },
+    {
+      "name": "2. Consultar Dashboard Completo (GET)",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/dashboard"
+      }
+    },
+    {
+      "name": "3. Consultar KPIs (GET)",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/kpis"
+      }
+    },
+    {
+      "name": "4. Listar Interacciones en DynamoDB (GET)",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/interacciones?limit=20"
+      }
+    },
+    {
+      "name": "5. Crear Nueva Interacción (POST -> WebSocket)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id_interaccion\": \"I9990001\",\n  \"id_usuario\": \"U000001\",\n  \"canal\": \"Discord\",\n  \"tipo\": \"comentario\",\n  \"texto\": \"Excelente sesión en vivo con la comunidad de arte digital!\",\n  \"tema\": \"arte_comisiones\",\n  \"sentimiento\": 0.92,\n  \"dispositivo\": \"Web\",\n  \"reacciones_recibidas\": 4,\n  \"etiquetas\": [\"arte\", \"comunidad\"]\n}"
+        },
+        "url": "{{baseUrl}}/api/interacciones"
+      }
+    },
+    {
+      "name": "6. Actualizar Interacción (PUT -> WebSocket)",
+      "request": {
+        "method": "PUT",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"canal\": \"Telegram\",\n  \"sentimiento\": -0.45,\n  \"texto\": \"Ajuste de sentimiento en tiempo real desde Postman\",\n  \"reacciones_recibidas\": 9\n}"
+        },
+        "url": "{{baseUrl}}/api/interacciones/I9990001"
+      }
+    },
+    {
+      "name": "7. Eliminar Interacción (DELETE -> WebSocket)",
+      "request": {
+        "method": "DELETE",
+        "url": "{{baseUrl}}/api/interacciones/I9990001"
+      }
+    }
+  ]
+}
