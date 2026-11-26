@@ -123,7 +123,7 @@ footer{font-size:12px;color:var(--muted)}
   <header>
     <div>
       <h1>Actividad de la comunidad</h1>
-      <p>COMMUNITY 360 · usuarios en Amazon RDS, interacciones en Amazon DynamoDB</p>
+      <p>COMMUNITY 360 · Panel analítico de la comunidad</p>
     </div>
     <div class="header-right">
       <div class="status" id="status" role="status"><span class="dot"></span><span id="statusText">Cargando…</span></div>
@@ -164,13 +164,13 @@ footer{font-size:12px;color:var(--muted)}
       <div class="scale"><span>Menos</span><div></div><span>Más</span></div>
     </section>
     <section class="panel">
-      <h2>Actividad reciente (WebSockets)</h2>
-      <p class="sub">Refleja altas, ediciones y bajas enviadas vía API REST</p>
+      <h2>Actividad reciente</h2>
+      <p class="sub">Últimos eventos registrados en tiempo real</p>
       <ul class="feed" id="feed"></ul>
     </section>
   </div>
 
-  <footer>Los porcentajes y promedios se calculan con las fórmulas documentadas desde Amazon RDS y DynamoDB en la nube, actualizándose en tiempo real mediante Socket.IO.</footer>
+  <footer>COMMUNITY 360 · Panel de monitoreo en tiempo real</footer>
 </div>
 
 <script src="/chart.umd.js"></script>
@@ -273,7 +273,7 @@ function setStatus(live, text){
 
 function renderKpis(){
   document.getElementById('kpis').innerHTML = KPIS.map(x=>
-    `<div class="kpi"><div class="v">${x.fmt(state.kpis[x.k] || 0)}</div><div class="l">${x.l}</div><div class="f">${x.f}</div></div>`).join('');
+    `<div class="kpi"><div class="v">${x.fmt(state.kpis[x.k] || 0)}</div><div class="l">${x.l}</div></div>`).join('');
 }
 
 const valuePlugin = {id:'valores',afterDatasetsDraw(c){
