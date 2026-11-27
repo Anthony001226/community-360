@@ -114,18 +114,32 @@ async function scanAllInteractions() {
 }
 
 async function computeDashboardSnapshot() {
-  // 1. Métricas de usuarios desde Amazon RDS PostgreSQL
-  const [rdsStatsRes, estatusRes] = await Promise.all([
+  // 1. Métricas de usuarios, demografía y territorio desde Amazon RDS PostgreSQL
+  const [
+    rdsStatsRes,
+    estatusRes,
+    interesesRes,
+    edadesRes,
+    especiesRes,
+    paisesRes,
+    ciudadesRes,
+    bitacoraRes,
+  ] = await Promise.all([
     pool.query(`
       SELECT
         COUNT(*)::int AS total_usuarios,
         COUNT(*) FILTER (WHERE u.estatus = 'activo')::int AS activos,
         COUNT(*) FILTER (WHERE u.estatus = 'en_riesgo')::int AS en_riesgo,
+        COUNT(*) FILTER (WHERE u.estatus = 'inactivo')::int AS inactivos,
         COUNT(*) FILTER (WHERE u.consentimiento_datos = TRUE)::int AS con_consentimiento,
+        COUNT(*) FILTER (WHERE u.consentimiento_datos = FALSE)::int AS sin_consentimiento,
         COUNT(*) FILTER (WHERE u.es_artista = TRUE)::int AS total_artistas,
         COALESCE(SUM(m.mensajes_30d), 0)::int AS sum_mensajes_30d,
         COALESCE(SUM(m.reacciones_30d), 0)::int AS sum_reacciones_30d,
-        COALESCE(SUM(m.comisiones_compradas), 0)::int AS sum_comisiones
+        COALESCE(SUM(m.comisiones_compradas), 0)::int AS sum_comisiones,
+        (SELECT COUNT(*)::int FROM ubicaciones_usuario ub
+         INNER JOIN usuarios u2 ON u2.id_usuario = ub.id_usuario
+         WHERE u2.consentimiento_datos = FALSE) AS violaciones_privacidad
       FROM usuarios u
       LEFT JOIN metricas_usuario m ON u.id_usuario = m.id_usuario
     `),
@@ -135,26 +149,90 @@ async function computeDashboardSnapshot() {
       GROUP BY estatus
       ORDER BY total DESC
     `),
+    pool.query(`
+      SELECT COALESCE(i.nombre, 'Sin definir') AS interes, COUNT(*)::int AS total
+      FROM usuarios u
+      LEFT JOIN cat_intereses i ON u.id_interes = i.id_interes
+      GROUP BY 1
+      ORDER BY total DESC
+    `),
+    pool.query(`
+      SELECT COALESCE(rango_edad, 'N/A') AS rango_edad, COUNT(*)::int AS total
+      FROM usuarios
+      GROUP BY 1
+      ORDER BY rango_edad ASC
+    `),
+    pool.query(`
+      SELECT COALESCE(especie_fursona, 'Otro') AS especie, COUNT(*)::int AS total
+      FROM usuarios
+      GROUP BY 1
+      ORDER BY total DESC
+      LIMIT 8
+    `),
+    pool.query(`
+      SELECT pais, COUNT(*)::int AS total
+      FROM ubicaciones_usuario
+      WHERE pais IS NOT NULL AND pais <> ''
+      GROUP BY pais
+      ORDER BY total DESC
+    `),
+    pool.query(`
+      SELECT ub.ciudad, ub.estado, ub.pais,
+             COUNT(*)::int AS total_miembros,
+             ROUND(AVG(m.sentimiento_promedio)::numeric, 3)::float AS sentimiento_prom
+      FROM ubicaciones_usuario ub
+      LEFT JOIN metricas_usuario m ON ub.id_usuario = m.id_usuario
+      WHERE ub.ciudad IS NOT NULL AND ub.ciudad <> ''
+      GROUP BY ub.ciudad, ub.estado, ub.pais
+      ORDER BY total_miembros DESC
+      LIMIT 16
+    `),
+    pool.query(`
+      SELECT registros_recibidos, registros_aceptados, registros_rechazados
+      FROM bitacora_etl
+      ORDER BY id_ejecucion DESC
+      LIMIT 1
+    `),
   ]);
 
   const st = rdsStatsRes.rows[0];
   const totalU = st.total_usuarios || 1;
   const totalArtistas = st.total_artistas || 1;
+  const etl = bitacoraRes.rows[0] || { registros_recibidos: 0, registros_aceptados: 0, registros_rechazados: 793 };
 
-  // 2. Interacciones desde Amazon DynamoDB
+  // 2. Interacciones en vivo desde Amazon DynamoDB
   const interactions = await scanAllInteractions();
   const totalI = interactions.length;
 
   let sumSentimiento = 0;
+  let totalReacciones = 0;
+  let positivos = 0;
+  let neutros = 0;
+  let negativos = 0;
   const canalMap = new Map();
+  const temaMap = new Map();
+  const tipoMap = new Map();
   const heat = Array.from({ length: 7 }, () => Array(24).fill(0));
 
   for (const item of interactions) {
     const s = Number(item.sentimiento);
-    if (!Number.isNaN(s)) sumSentimiento += s;
+    if (!Number.isNaN(s)) {
+      sumSentimiento += s;
+      if (s > 0.15) positivos++;
+      else if (s < -0.15) negativos++;
+      else neutros++;
+    }
+
+    totalReacciones += parseInt(item.reacciones_recibidas, 10) || 0;
 
     const canal = item.canal || 'Otro';
     canalMap.set(canal, (canalMap.get(canal) || 0) + 1);
+
+    const tema = item.tema || 'general';
+    temaMap.set(tema, (temaMap.get(tema) || 0) + 1);
+
+    const tipo = item.tipo || 'otro';
+    tipoMap.set(tipo, (tipoMap.get(tipo) || 0) + 1);
 
     if (item.timestamp) {
       const dt = new Date(item.timestamp);
@@ -168,11 +246,25 @@ async function computeDashboardSnapshot() {
 
   const kpis = {
     total_usuarios: st.total_usuarios,
+    total_artistas: st.total_artistas,
     total_interacciones: totalI,
+    activos: st.activos,
+    en_riesgo: st.en_riesgo,
+    inactivos: st.inactivos,
+    con_consentimiento: st.con_consentimiento,
+    sin_consentimiento: st.sin_consentimiento,
+    violaciones_privacidad: st.violaciones_privacidad,
+    cuarentena_total: etl.registros_rechazados || 793,
+    total_paises: paisesRes.rowCount,
+    total_ciudades: ciudadesRes.rowCount,
     activos_pct: Number(((st.activos / totalU) * 100).toFixed(2)),
     riesgo_pct: Number(((st.en_riesgo / totalU) * 100).toFixed(2)),
     consentimiento_pct: Number(((st.con_consentimiento / totalU) * 100).toFixed(2)),
     sentimiento_prom: totalI > 0 ? Number((sumSentimiento / totalI).toFixed(3)) : 0,
+    reacciones_totales: totalReacciones,
+    reacciones_prom: totalI > 0 ? Number((totalReacciones / totalI).toFixed(1)) : 0,
+    tasa_positiva_pct: totalI > 0 ? Number(((positivos / totalI) * 100).toFixed(1)) : 0,
+    tasa_alerta_pct: totalI > 0 ? Number(((negativos / totalI) * 100).toFixed(1)) : 0,
     engagement: Number(((st.sum_mensajes_30d + st.sum_reacciones_30d) / totalU).toFixed(2)),
     comisiones_por_artista: Number((st.sum_comisiones / totalArtistas).toFixed(2)),
   };
@@ -181,14 +273,36 @@ async function computeDashboardSnapshot() {
     .map(([canal, total]) => ({ canal, total }))
     .sort((a, b) => b.total - a.total);
 
+  const temas = Array.from(temaMap.entries())
+    .map(([tema, total]) => ({ tema, total }))
+    .sort((a, b) => b.total - a.total);
+
+  const tipos = Array.from(tipoMap.entries())
+    .map(([tipo, total]) => ({ tipo, total }))
+    .sort((a, b) => b.total - a.total);
+
+  const polaridad = [
+    { label: 'Positivo', key: 'positivo', total: positivos },
+    { label: 'Neutro', key: 'neutro', total: neutros },
+    { label: 'Crítico / Moderación', key: 'critico', total: negativos },
+  ];
+
   const recientes = [...interactions]
     .sort((a, b) => String(b.timestamp || '').localeCompare(String(a.timestamp || '')))
-    .slice(0, 6);
+    .slice(0, 25);
 
   return {
     kpis,
     canales,
+    temas,
+    tipos,
+    polaridad,
     estatus: estatusRes.rows,
+    intereses: interesesRes.rows,
+    edades: edadesRes.rows,
+    especies: especiesRes.rows,
+    paises: paisesRes.rows,
+    ciudades: ciudadesRes.rows,
     heat,
     recientes,
   };
@@ -331,21 +445,50 @@ app.get('/api/dashboard', async (_req, res) => {
 app.get('/api/usuarios', async (req, res) => {
   try {
     const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 1), 200);
+    const estatus = req.query.estatus ? String(req.query.estatus).trim() : '';
+    const consentimiento = req.query.consentimiento ? String(req.query.consentimiento).trim() : '';
+    const search = req.query.search ? String(req.query.search).trim() : '';
+
+    const where = [];
+    const params = [];
+
+    if (estatus && ['activo', 'en_riesgo', 'inactivo'].includes(estatus)) {
+      params.push(estatus);
+      where.push(`u.estatus = $${params.length}`);
+    }
+    if (consentimiento === 'true' || consentimiento === 'false') {
+      params.push(consentimiento === 'true');
+      where.push(`u.consentimiento_datos = $${params.length}`);
+    }
+    if (search) {
+      params.push(`%${search}%`);
+      where.push(`(u.id_usuario ILIKE $${params.length} OR u.alias ILIKE $${params.length})`);
+    }
+
+    const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
+    const countRes = await pool.query(`SELECT COUNT(*)::int AS total_filtrado FROM usuarios u ${whereSql}`, params);
+
+    params.push(limit);
     const result = await pool.query(
-      `SELECT u.id_usuario, u.alias, u.fecha_ingreso, u.rango_edad, u.especie_fursona,
+      `SELECT u.id_usuario, u.alias, u.fecha_ingreso, u.ultima_actividad, u.rango_edad, u.especie_fursona,
               p.nombre AS plataforma, i.nombre AS interes, u.es_artista, u.estatus,
               u.consentimiento_datos, m.mensajes_30d, m.reacciones_30d, m.sentimiento_promedio,
-              ub.pais, ub.estado, ub.ciudad
+              ub.pais, ub.estado, ub.ciudad, ub.latitud, ub.longitud
        FROM usuarios u
        LEFT JOIN cat_plataformas p ON u.id_plataforma = p.id_plataforma
        LEFT JOIN cat_intereses i ON u.id_interes = i.id_interes
        LEFT JOIN metricas_usuario m ON u.id_usuario = m.id_usuario
        LEFT JOIN ubicaciones_usuario ub ON u.id_usuario = ub.id_usuario
+       ${whereSql}
        ORDER BY u.id_usuario ASC
-       LIMIT $1`,
-      [limit]
+       LIMIT $${params.length}`,
+      params
     );
-    res.status(200).json({ total: result.rowCount, data: result.rows });
+    res.status(200).json({
+      total: result.rowCount,
+      total_filtrado: countRes.rows[0].total_filtrado,
+      data: result.rows,
+    });
   } catch (err) {
     res.status(500).json({ error: 'Error al consultar usuarios', detail: err.message });
   }

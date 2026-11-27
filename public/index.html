@@ -1,359 +1,423 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-theme="dark">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>COMMUNITY 360 · Panel de actividad</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<style>
-:root{
-  --bg:#F2F5F8; --surface:#FFFFFF; --ink:#14283C; --muted:#5B6B7C; --line:#DCE3EA;
-  --teal:#0F8B8D; --teal-soft:#E3F2F2; --amber:#D99A1B; --slate:#8FA3B8; --coral:#D8554A;
-  --font:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
-}
-@media (prefers-color-scheme:dark){
-  :root{--bg:#0F1A26; --surface:#16283A; --ink:#E8EEF4; --muted:#9FB0C1; --line:#27405A;
-        --teal:#3FC1C3; --teal-soft:#16405A; --amber:#F0B23C; --slate:#6F89A3; --coral:#EF7F73;}
-}
-*{box-sizing:border-box;margin:0}
-html{background:var(--bg)}
-body{font-family:var(--font);color:var(--ink);background:var(--bg);line-height:1.45;padding:32px 24px 48px}
-.wrap{max-width:1180px;margin:0 auto;display:grid;gap:24px}
-[hidden]{display:none !important}
-:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
-
-/* Login */
-.login-wrap{min-height:85vh;display:grid;place-items:center}
-.login-card{width:100%;max-width:410px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:32px 28px;display:grid;gap:18px}
-.login-card h1{font-size:22px;font-weight:600}
-.login-card p{font-size:13px;color:var(--muted);margin-top:4px}
-.field{display:grid;gap:6px}
-.field label{font-size:13px;font-weight:500}
-.field input{font:inherit;font-size:14px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
-.btn-primary{font:inherit;font-size:14px;font-weight:600;color:#fff;background:var(--teal);border:0;border-radius:8px;padding:11px 16px;cursor:pointer}
-.btn-primary:hover{opacity:.92}
-.err-msg{font-size:13px;color:var(--coral);min-height:18px}
-
-/* Header */
-header{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
-h1{font-size:26px;font-weight:600;letter-spacing:-.01em}
-header p{color:var(--muted);font-size:14px;margin-top:2px}
-.header-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.status{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 14px}
-.dot{width:8px;height:8px;border-radius:50%;background:var(--slate)}
-.status.live .dot{background:var(--teal);box-shadow:0 0 0 4px var(--teal-soft)}
-.btn-logout{font:inherit;font-size:13px;font-weight:500;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 14px;cursor:pointer}
-.btn-logout:hover{background:var(--teal-soft)}
-
-.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:22px 24px}
-.panel h2{font-size:15px;font-weight:600}
-.panel .sub{font-size:13px;color:var(--muted);margin:2px 0 18px}
-
-/* KPIs */
-.kpis{display:grid;grid-template-columns:repeat(6,1fr);padding:0;overflow:hidden}
-.kpi{padding:20px 20px 18px;border-left:1px solid var(--line)}
-.kpi:first-child{border-left:0}
-.kpi .v{font-size:30px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
-.kpi .l{font-size:13px;font-weight:500;margin-top:2px}
-.kpi .f{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.35}
-
-.row{display:grid;gap:24px}
-.r1{grid-template-columns:7fr 5fr}
-.r2{grid-template-columns:8fr 4fr}
-
-.chart-box{position:relative;height:290px}
-.donut-wrap{display:grid;grid-template-columns:170px 1fr;gap:20px;align-items:center}
-.donut-box{position:relative;height:170px}
-.donut-center{position:absolute;inset:0;display:grid;place-content:center;text-align:center;pointer-events:none}
-.donut-center b{font-size:24px;font-weight:600;font-variant-numeric:tabular-nums}
-.donut-center span{font-size:12px;color:var(--muted)}
-.legend{list-style:none;padding:0;display:grid;gap:12px}
-.legend li{display:grid;grid-template-columns:12px 1fr auto;gap:10px;align-items:center;font-size:14px}
-.legend i{width:12px;height:12px;border-radius:3px}
-.legend b{font-weight:600;font-variant-numeric:tabular-nums}
-
-/* Mapa de calor */
-.heat{display:grid;grid-template-columns:34px 1fr;gap:6px}
-.heat-days{display:grid;grid-template-rows:repeat(7,1fr);gap:3px;font-size:12px;color:var(--muted)}
-.heat-days span{display:flex;align-items:center}
-.heat-grid{display:grid;grid-template-columns:repeat(24,1fr);grid-template-rows:repeat(7,26px);gap:3px}
-.cell{border-radius:3px;background:var(--teal)}
-.heat-hours{grid-column:2;display:grid;grid-template-columns:repeat(24,1fr);gap:3px;font-size:11px;color:var(--muted);margin-top:4px}
-.heat-hours span{text-align:center}
-.scale{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);margin-top:14px}
-.scale div{width:140px;height:8px;border-radius:4px;background:linear-gradient(90deg,color-mix(in srgb,var(--teal) 8%,var(--surface)),var(--teal))}
-
-/* Feed en vivo */
-.feed{list-style:none;padding:0;display:grid;gap:0}
-.feed li{padding:12px 0;border-top:1px solid var(--line);font-size:13px;display:grid;gap:2px}
-.feed li:first-child{border-top:0;padding-top:0}
-.feed .who{font-weight:600}
-.feed .meta{color:var(--muted);font-size:12px}
-.feed li.new{animation:flash 1.6s ease-out}
-@keyframes flash{from{background:var(--teal-soft)}to{background:transparent}}
-
-footer{font-size:12px;color:var(--muted)}
-@media (max-width:1050px){.kpis{grid-template-columns:repeat(3,1fr)}.kpi:nth-child(4){border-left:0}.kpi:nth-child(n+4){border-top:1px solid var(--line)}.r1,.r2{grid-template-columns:1fr}}
-@media (max-width:560px){body{padding:20px 14px 36px}.kpis{grid-template-columns:repeat(2,1fr)}.kpi:nth-child(n){border-left:0;border-top:1px solid var(--line)}.kpi:nth-child(-n+2){border-top:0}.kpi:nth-child(even){border-left:1px solid var(--line)}.donut-wrap{grid-template-columns:1fr}.donut-box{max-width:200px;margin:0 auto}.heat{overflow-x:auto}.heat-grid,.heat-hours{min-width:520px}}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>COMMUNITY 360 · Panel Analítico</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
 
-<main id="loginView" class="login-wrap">
-  <form id="loginForm" class="login-card">
-    <div>
-      <h1>COMMUNITY 360</h1>
-      <p>Acceso al panel analítico en tiempo real</p>
-    </div>
-    <div class="field">
-      <label for="identifier">Usuario o correo institucional</label>
-      <input id="identifier" type="text" required autocomplete="username" placeholder="lizandro.reyes">
-    </div>
-    <div class="field">
-      <label for="password">Contraseña</label>
-      <input id="password" type="password" required autocomplete="current-password" placeholder="••••••••">
-    </div>
-    <div id="loginError" class="err-msg" role="alert"></div>
-    <button type="submit" class="btn-primary">Iniciar sesión</button>
-  </form>
-</main>
-
-<div id="dashboardView" class="wrap" hidden>
-  <header>
-    <div>
-      <h1>Actividad de la comunidad</h1>
-      <p>COMMUNITY 360 · Panel analítico de la comunidad</p>
-    </div>
-    <div class="header-right">
-      <div class="status" id="status" role="status"><span class="dot"></span><span id="statusText">Cargando…</span></div>
-      <button class="btn-logout" id="logoutBtn" type="button">Salir (<span id="userLabel"></span>)</button>
-    </div>
-  </header>
-
-  <section class="panel kpis" id="kpis" aria-label="Indicadores clave"></section>
-
-  <div class="row r1">
-    <section class="panel">
-      <h2>Interacciones por canal</h2>
-      <p class="sub">Total de mensajes, comentarios y reacciones por red social</p>
-      <div class="chart-box"><canvas id="canales" aria-label="Gráfica de barras de interacciones por canal" role="img"></canvas></div>
-    </section>
-    <section class="panel">
-      <h2>Estatus de usuarios</h2>
-      <p class="sub">Cómo se reparte el padrón completo</p>
-      <div class="donut-wrap">
-        <div class="donut-box">
-          <canvas id="estatus" aria-label="Gráfica de dona de estatus de usuarios" role="img"></canvas>
-          <div class="donut-center"><b id="totalUsuarios">0</b><span>usuarios</span></div>
+  <!-- PANTALLA DE ACCESO -->
+  <main id="loginView" class="login-shell">
+    <form id="loginForm" class="login-card">
+      <div class="login-brand">
+        <div class="brand-mark">C360</div>
+        <div>
+          <h1>COMMUNITY 360</h1>
+          <p>Panel analítico de la comunidad</p>
         </div>
-        <ul class="legend" id="legend"></ul>
       </div>
-    </section>
+
+      <div class="field">
+        <label for="identifier">Usuario o correo institucional</label>
+        <input id="identifier" type="text" required autocomplete="username" placeholder="lizandro.reyes">
+      </div>
+
+      <div class="field">
+        <label for="password">Contraseña</label>
+        <input id="password" type="password" required autocomplete="current-password" placeholder="••••••••">
+      </div>
+
+      <div id="loginError" class="err-msg" role="alert"></div>
+      <button type="submit" class="btn-primary">Iniciar sesión</button>
+    </form>
+  </main>
+
+  <!-- APLICACIÓN PRINCIPAL -->
+  <div id="appShell" hidden>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="topbar-brand">
+          <div class="brand-mark">C360</div>
+          <div>
+            <div class="topbar-title">COMMUNITY 360</div>
+            <div class="topbar-sub">Monitoreo y analítica comunitaria</div>
+          </div>
+        </div>
+
+        <nav class="nav-pills" aria-label="Pantallas del panel">
+          <button type="button" class="nav-pill active" data-view="vista-vivo">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            <span>En Vivo</span>
+          </button>
+          <button type="button" class="nav-pill" data-view="vista-comunidad">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <span>Comunidad</span>
+          </button>
+          <button type="button" class="nav-pill" data-view="vista-territorio">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            <span>Territorio</span>
+          </button>
+          <button type="button" class="nav-pill" data-view="vista-directorio">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <span>Directorio</span>
+          </button>
+        </nav>
+
+        <div class="topbar-actions">
+          <button type="button" id="themeBtn" class="icon-btn" title="Cambiar tema">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>
+            <span id="themeLabel">Claro</span>
+          </button>
+
+          <div id="liveBadge" class="live-badge" role="status">
+            <span class="live-dot"></span>
+            <span id="liveText">Conectando...</span>
+          </div>
+
+          <button type="button" id="logoutBtn" class="icon-btn">
+            <span>Salir (<strong id="userLabel"></strong>)</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <!-- BARRA DE ACTUALIZACIONES EN VIVO -->
+      <section id="liveTicker" class="live-ticker" aria-live="polite">
+        <div class="ticker-left">
+          <span class="ticker-pill">En vivo</span>
+          <span id="tickerText">Panel sincronizado. Cualquier alta, edición o baja aparecerá aquí automáticamente.</span>
+        </div>
+        <span id="tickerTime" class="ticker-time">Al día</span>
+      </section>
+
+      <!-- =============================================================
+           PANTALLA 1: EN VIVO (PULSO Y ACTIVIDAD EN TIEMPO REAL)
+           ============================================================= -->
+      <section id="vista-vivo" class="view-section active">
+        <div class="view-head">
+          <div>
+            <h2>Pulso de la comunidad en tiempo real</h2>
+            <p>Seguimiento continuo de publicaciones, clima de conversación, temas críticos y horarios pico</p>
+          </div>
+        </div>
+
+        <div id="liveKpis" class="kpi-grid-5"></div>
+
+        <div class="grid-2">
+          <article class="panel">
+            <div class="panel-head">
+              <div>
+                <h3>Interacciones por canal</h3>
+                <p>Volumen de actividad distribuido por red social</p>
+              </div>
+              <span class="chip">Tiempo real</span>
+            </div>
+            <div class="chart-box"><canvas id="chartCanales"></canvas></div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-head">
+              <div>
+                <h3>Temas más comentados</h3>
+                <p>Asuntos de conversación y focos de moderación</p>
+              </div>
+              <span class="chip">Tiempo real</span>
+            </div>
+            <div class="chart-box"><canvas id="chartTemas"></canvas></div>
+          </article>
+        </div>
+
+        <div class="grid-5-7">
+          <article class="panel">
+            <div class="panel-head">
+              <div>
+                <h3>Balance de sentimiento</h3>
+                <p>Proporción entre ambiente favorable, neutro y crítico</p>
+              </div>
+              <span class="chip">Tiempo real</span>
+            </div>
+            <div class="donut-layout">
+              <div class="donut-box">
+                <canvas id="chartPolaridad"></canvas>
+                <div class="donut-center"><b id="polaridadTotal">0</b><span>mensajes</span></div>
+              </div>
+              <ul id="polaridadLegend" class="legend-list"></ul>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-head">
+              <div>
+                <h3>Forma de participación</h3>
+                <p>Distribución por comentarios, mensajes, reacciones y encuestas</p>
+              </div>
+              <span class="chip">Tiempo real</span>
+            </div>
+            <div class="chart-box"><canvas id="chartTipos"></canvas></div>
+          </article>
+        </div>
+
+        <div class="grid-8-4">
+          <article class="panel">
+            <div class="panel-head">
+              <div>
+                <h3>Actividad por día y hora</h3>
+                <p>Horarios con mayor volumen de publicaciones acumuladas (UTC)</p>
+              </div>
+              <div class="heat-scale"><span>Menos</span><div class="heat-bar"></div><span>Más</span></div>
+            </div>
+            <div class="heat">
+              <div id="heatDays" class="heat-days"></div>
+              <div id="heatGrid" class="heat-grid"></div>
+              <div id="heatHours" class="heat-hours"></div>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-head">
+              <div>
+                <h3>Actividad reciente</h3>
+                <p>Últimos eventos recibidos en vivo</p>
+              </div>
+              <span class="chip">En vivo</span>
+            </div>
+            <ul id="feedList" class="feed-list"></ul>
+          </article>
+        </div>
+      </section>
+
+      <!-- =============================================================
+           PANTALLA 2: COMUNIDAD (RETENCIÓN Y DEMOGRAFÍA)
+           ============================================================= -->
+      <section id="vista-comunidad" class="view-section">
+        <div class="view-head">
+          <div>
+            <h2>Retención y perfil demográfico</h2>
+            <p>Análisis de permanencia, intereses culturales, edades y perfiles creativos del padrón</p>
+          </div>
+        </div>
+
+        <div id="comunidadKpis" class="kpi-grid-4"></div>
+
+        <div class="grid-5-7">
+          <article class="panel">
+            <div class="panel-head">
+              <div>
+                <h3>Estatus de miembros</h3>
+                <p>Reparto entre activos, en riesgo de abandono e inactivos</p>
+              </div>
+              <span class="chip neutral">Padrón general</span>
+            </div>
+            <div class="donut-layout">
+              <div class="donut-box">
+                <canvas id="chartEstatus"></canvas>
+                <div class="donut-center"><b id="estatusTotal">0</b><span>miembros</span></div>
+              </div>
+              <ul id="estatusLegend" class="legend-list"></ul>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-head">
+              <div>
+                <h3>Intereses principales</h3>
+                <p>Actividades favoritas declaradas por los miembros</p>
+              </div>
+              <span class="chip neutral">Padrón general</span>
+            </div>
+            <div class="chart-box"><canvas id="chartIntereses"></canvas></div>
+          </article>
+        </div>
+
+        <div class="grid-2">
+          <article class="panel">
+            <div class="panel-head">
+              <div>
+                <h3>Distribución por rango de edad</h3>
+                <p>Composición generacional de la comunidad</p>
+              </div>
+            </div>
+            <div class="chart-box"><canvas id="chartEdades"></canvas></div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-head">
+              <div>
+                <h3>Especies más representadas</h3>
+                <p>Principales identidades declaradas en el perfil comunitario</p>
+              </div>
+            </div>
+            <div class="chart-box"><canvas id="chartEspecies"></canvas></div>
+          </article>
+        </div>
+      </section>
+
+      <!-- =============================================================
+           PANTALLA 3: TERRITORIO (MAPA REGIONAL Y EVENTOS)
+           ============================================================= -->
+      <section id="vista-territorio" class="view-section">
+        <div class="view-head">
+          <div>
+            <h2>Distribución territorial y sedes de eventos</h2>
+            <p>Ciudades y países con mayor concentración de miembros que autorizaron compartir su ubicación</p>
+          </div>
+        </div>
+
+        <div id="territorioKpis" class="kpi-grid-4"></div>
+
+        <div class="grid-7-5">
+          <article class="panel">
+            <div class="panel-head">
+              <div>
+                <h3>Top ciudades para eventos presenciales</h3>
+                <p>Sedes con mayor densidad de comunidad autorizada</p>
+              </div>
+              <span class="chip neutral">Con consentimiento</span>
+            </div>
+            <div class="chart-box tall"><canvas id="chartCiudades"></canvas></div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-head">
+              <div>
+                <h3>Distribución por país</h3>
+                <p>Proporción de miembros con ubicación compartida</p>
+              </div>
+            </div>
+            <div class="donut-layout">
+              <div class="donut-box">
+                <canvas id="chartPaises"></canvas>
+                <div class="donut-center"><b id="paisesTotal">0</b><span>ubicados</span></div>
+              </div>
+              <ul id="paisesLegend" class="legend-list"></ul>
+            </div>
+          </article>
+        </div>
+
+        <article class="panel">
+          <div class="panel-head">
+            <div>
+              <h3>Mapa de densidad regional</h3>
+              <p>Intensidad de miembros y ánimo promedio por ciudad y estado</p>
+            </div>
+          </div>
+          <div id="regionGrid" class="region-grid"></div>
+        </article>
+      </section>
+
+      <!-- =============================================================
+           PANTALLA 4: DIRECTORIO Y PRIVACIDAD (SOLO LECTURA)
+           ============================================================= -->
+      <section id="vista-directorio" class="view-section">
+        <div class="view-head">
+          <div>
+            <h2>Directorio, privacidad e historial</h2>
+            <p>Consulta filtrable de miembros, verificación de ubicaciones protegidas y registro reciente</p>
+          </div>
+
+          <div class="subtabs" role="tablist">
+            <button type="button" class="subtab active" data-dir="miembros">Padrón y privacidad</button>
+            <button type="button" class="subtab" data-dir="interacciones">Historial de publicaciones</button>
+          </div>
+        </div>
+
+        <article id="panelDirMiembros" class="panel">
+          <div class="panel-head">
+            <div>
+              <h3>Padrón de miembros y resguardo de ubicación</h3>
+              <p>Filtra por estado de actividad o verifica los perfiles cuya ubicación permanece privada</p>
+            </div>
+            <div class="filter-bar">
+              <input id="filterSearch" type="search" placeholder="Buscar por ID o alias...">
+              <select id="filterEstatus" aria-label="Filtrar por estatus">
+                <option value="">Estatus: Todos</option>
+                <option value="en_riesgo">En riesgo</option>
+                <option value="activo">Activos</option>
+                <option value="inactivo">Inactivos</option>
+              </select>
+              <select id="filterConsent" aria-label="Filtrar por privacidad">
+                <option value="">Ubicación: Todas</option>
+                <option value="false">Privada (Sin consentimiento)</option>
+                <option value="true">Autorizada</option>
+              </select>
+              <select id="filterLimit" aria-label="Cantidad de registros">
+                <option value="25">25 filas</option>
+                <option value="50" selected>50 filas</option>
+                <option value="100">100 filas</option>
+              </select>
+              <button type="button" id="btnFilter" class="icon-btn">Buscar</button>
+            </div>
+          </div>
+
+          <div class="query-summary">
+            <span id="dirSummary">Cargando directorio...</span>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Clave</th>
+                  <th>Alias</th>
+                  <th>Estatus</th>
+                  <th>Red principal</th>
+                  <th>Interés</th>
+                  <th style="text-align:right">Mensajes 30d</th>
+                  <th style="text-align:right">Ánimo</th>
+                  <th>Privacidad</th>
+                  <th>Ciudad / País</th>
+                  <th>Coordenadas</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyUsuarios"></tbody>
+            </table>
+          </div>
+        </article>
+
+        <article id="panelDirInteracciones" class="panel" hidden>
+          <div class="panel-head">
+            <div>
+              <h3>Últimas publicaciones registradas</h3>
+              <p>Listado actualizado automáticamente con las 25 interacciones más recientes</p>
+            </div>
+            <span class="chip">Tiempo real</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Folio</th>
+                  <th>Miembro</th>
+                  <th>Canal</th>
+                  <th>Tipo</th>
+                  <th>Tema</th>
+                  <th style="text-align:right">Ánimo</th>
+                  <th style="text-align:right">Reacciones</th>
+                  <th>Etiquetas</th>
+                  <th>Fecha</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyInteracciones"></tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <footer>
+      <span>COMMUNITY 360 · Panel analítico de monitoreo comunitario</span>
+      <span>Actualización automática en tiempo real</span>
+    </footer>
   </div>
 
-  <div class="row r2">
-    <section class="panel">
-      <h2>Actividad por día y hora</h2>
-      <p class="sub">Entre más oscuro el cuadro, más interacciones hubo en ese horario (UTC)</p>
-      <div class="heat">
-        <div class="heat-days" id="heatDays"></div>
-        <div class="heat-grid" id="heatGrid"></div>
-        <div class="heat-hours" id="heatHours"></div>
-      </div>
-      <div class="scale"><span>Menos</span><div></div><span>Más</span></div>
-    </section>
-    <section class="panel">
-      <h2>Actividad reciente</h2>
-      <p class="sub">Últimos eventos registrados en tiempo real</p>
-      <ul class="feed" id="feed"></ul>
-    </section>
-  </div>
-
-  <footer>COMMUNITY 360 · Panel de monitoreo en tiempo real</footer>
-</div>
-
-<script src="/chart.umd.js"></script>
-<script src="/socket.io/socket.io.js"></script>
-<script>
-const DIAS = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
-const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
-const nf = new Intl.NumberFormat('es-MX');
-
-const KPIS = [
-  {k:'activos_pct',l:'Usuarios activos',f:'activos ÷ total × 100',fmt:v=>v.toFixed(1)+' %'},
-  {k:'riesgo_pct',l:'Usuarios en riesgo',f:'en_riesgo ÷ total × 100',fmt:v=>v.toFixed(1)+' %'},
-  {k:'consentimiento_pct',l:'Con consentimiento',f:'consentimiento_datos = sí ÷ total × 100',fmt:v=>v.toFixed(1)+' %'},
-  {k:'sentimiento_prom',l:'Sentimiento promedio',f:'Σ sentimiento ÷ n interacciones',fmt:v=>(v>0?'+':'')+v.toFixed(3)},
-  {k:'engagement',l:'Actividad por usuario',f:'(Σ mensajes_30d + Σ reacciones_30d) ÷ usuarios',fmt:v=>v.toFixed(1)},
-  {k:'comisiones_por_artista',l:'Comisiones por artista',f:'Σ comisiones_compradas ÷ artistas',fmt:v=>v.toFixed(1)}
-];
-const ESTATUS_COLOR = {activo:'--teal',inactivo:'--slate',en_riesgo:'--amber'};
-const ESTATUS_NOMBRE = {activo:'Activos',inactivo:'Inactivos',en_riesgo:'En riesgo'};
-
-let state = {}, charts = {}, socket = null;
-
-async function checkSession(){
-  const token = localStorage.getItem('c360_token');
-  if(!token) return false;
-  try{
-    const r = await fetch('/api/auth/me',{headers:{Authorization:'Bearer '+token}});
-    if(!r.ok) throw new Error('unauthorized');
-    const data = await r.json();
-    enterDashboard(data.user);
-    return true;
-  }catch{
-    localStorage.removeItem('c360_token');
-    return false;
-  }
-}
-
-document.getElementById('loginForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const errEl = document.getElementById('loginError');
-  errEl.textContent = '';
-  const identifier = document.getElementById('identifier').value.trim();
-  const password = document.getElementById('password').value;
-  try{
-    const r = await fetch('/api/auth/login',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({identifier,password})
-    });
-    const data = await r.json();
-    if(!r.ok){ errEl.textContent = data.error || 'Error al iniciar sesión.'; return; }
-    localStorage.setItem('c360_token', data.token);
-    enterDashboard(data.user);
-  }catch{
-    errEl.textContent = 'No se pudo conectar con el servidor.';
-  }
-});
-
-document.getElementById('logoutBtn').addEventListener('click', () => {
-  localStorage.removeItem('c360_token');
-  if(socket){ socket.disconnect(); socket = null; }
-  document.getElementById('dashboardView').hidden = true;
-  document.getElementById('loginView').hidden = false;
-});
-
-function enterDashboard(user){
-  document.getElementById('loginView').hidden = true;
-  document.getElementById('dashboardView').hidden = false;
-  document.getElementById('userLabel').textContent = user.username;
-  loadDashboard();
-}
-
-async function loadDashboard(){
-  try{
-    const r = await fetch('/api/dashboard');
-    if(!r.ok) throw new Error('Error al consultar /api/dashboard');
-    state = await r.json();
-    renderAll();
-    renderInitialFeed(state.recientes || []);
-    setStatus(false, 'Datos históricos cargados');
-    connectSocket();
-  }catch(err){
-    setStatus(false, 'Error de conexión con la nube');
-  }
-}
-
-function renderAll(){
-  renderKpis();
-  renderBars();
-  renderDonut();
-  renderHeat();
-}
-
-function setStatus(live, text){
-  const el = document.getElementById('status');
-  const t = document.getElementById('statusText');
-  el.classList.toggle('live', Boolean(live));
-  t.textContent = text;
-}
-
-function renderKpis(){
-  document.getElementById('kpis').innerHTML = KPIS.map(x=>
-    `<div class="kpi"><div class="v">${x.fmt(state.kpis[x.k] || 0)}</div><div class="l">${x.l}</div></div>`).join('');
-}
-
-const valuePlugin = {id:'valores',afterDatasetsDraw(c){
-  const {ctx} = c; ctx.save(); ctx.fillStyle = css('--ink'); ctx.font = '600 12px '+css('--font'); ctx.textBaseline='middle';
-  c.getDatasetMeta(0).data.forEach((b,i)=>ctx.fillText(nf.format(c.data.datasets[0].data[i]),b.x+8,b.y)); ctx.restore();}};
-
-function renderBars(){
-  const d = [...(state.canales || [])].sort((a,b)=>b.total-a.total);
-  charts.bar?.destroy();
-  charts.bar = new Chart(document.getElementById('canales'),{
-    type:'bar',plugins:[valuePlugin],
-    data:{labels:d.map(x=>x.canal),datasets:[{data:d.map(x=>x.total),backgroundColor:css('--teal'),borderRadius:4,barThickness:22}]},
-    options:{indexAxis:'y',maintainAspectRatio:false,layout:{padding:{right:36}},
-      plugins:{legend:{display:false}},
-      scales:{x:{grid:{color:css('--line')},border:{display:false},ticks:{color:css('--muted')}},
-              y:{grid:{display:false},border:{display:false},ticks:{color:css('--ink'),font:{size:13}}}}}
-  });
-}
-
-function renderDonut(){
-  const d = state.estatus || [], total = d.reduce((a,x)=>a+x.total,0);
-  document.getElementById('totalUsuarios').textContent = nf.format(total);
-  document.getElementById('legend').innerHTML = d.map(x=>
-    `<li><i style="background:${css(ESTATUS_COLOR[x.estatus]||'--slate')}"></i><span>${ESTATUS_NOMBRE[x.estatus]||x.estatus}</span><b>${nf.format(x.total)}</b></li>`).join('');
-  charts.donut?.destroy();
-  charts.donut = new Chart(document.getElementById('estatus'),{
-    type:'doughnut',
-    data:{labels:d.map(x=>ESTATUS_NOMBRE[x.estatus]||x.estatus),datasets:[{data:d.map(x=>x.total),
-      backgroundColor:d.map(x=>css(ESTATUS_COLOR[x.estatus]||'--slate')),borderColor:css('--surface'),borderWidth:3}]},
-    options:{maintainAspectRatio:false,cutout:'68%',plugins:{legend:{display:false}}}
-  });
-}
-
-function renderHeat(){
-  const g = document.getElementById('heatGrid'), heat = state.heat || [];
-  const max = Math.max(...heat.flat(),1);
-  document.getElementById('heatDays').innerHTML = DIAS.map(d=>`<span>${d}</span>`).join('');
-  document.getElementById('heatHours').innerHTML = Array.from({length:24},(_,h)=>`<span>${h%3===0?h:''}</span>`).join('');
-  g.innerHTML = heat.map((row,d)=>row.map((v,h)=>
-    `<div class="cell" data-d="${d}" data-h="${h}" style="opacity:${(0.08+0.92*v/max).toFixed(2)}" title="${DIAS[d]} ${h}:00 — ${v} interacciones"></div>`).join('')).join('');
-}
-
-const feedEl = document.getElementById('feed');
-function renderInitialFeed(items){
-  feedEl.innerHTML = '';
-  items.slice(0,5).forEach(ev => pushFeed(ev, 'histórico', false));
-}
-
-function pushFeed(ev, accion, highlight){
-  const li = document.createElement('li');
-  if(highlight) li.className = 'new';
-  const hora = new Date(ev.timestamp || Date.now()).toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
-  li.innerHTML = `<span class="who">${ev.id_interaccion} · ${ev.id_usuario}</span><span>[${accion}] ${ev.tipo} en ${ev.canal} (sentimiento: ${ev.sentimiento})</span><span class="meta">${hora}</span>`;
-  feedEl.prepend(li);
-  while(feedEl.children.length > 5) feedEl.lastChild.remove();
-}
-
-function connectSocket(){
-  if(typeof io === 'undefined' || socket) return;
-  socket = io();
-  socket.on('connect', () => setStatus(true, 'En vivo (WebSockets)'));
-  socket.on('disconnect', () => setStatus(false, 'Desconectado'));
-  socket.on('dashboard_actualizado', (payload) => {
-    state = {
-      kpis: payload.kpis,
-      canales: payload.canales,
-      estatus: payload.estatus,
-      heat: payload.heat,
-      recientes: payload.recientes
-    };
-    renderAll();
-    if(payload.detail){
-      pushFeed(payload.detail, payload.eventType || 'actualizado', true);
-    }
-  });
-}
-
-if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) Chart.defaults.animation = false;
-Chart.defaults.font.family = css('--font');
-checkSession();
-</script>
+  <script src="/chart.umd.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/app.js"></script>
 </body>
 </html>
